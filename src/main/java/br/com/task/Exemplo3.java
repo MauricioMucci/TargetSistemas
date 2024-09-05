@@ -5,8 +5,8 @@ import org.json.JSONArray;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 public class Exemplo3 {
 
@@ -22,30 +22,47 @@ public class Exemplo3 {
     Estes dias devem ser ignorados no cálculo da média;
     * */
     public static void main(String[] args) {
-        String filePath = "faturamento.json"; // Caminho para o arquivo JSON
+        String filePath = "./faturamento.json";
         try {
-            String content = new String(Files.readAllBytes(Paths.get(filePath)));
-            JSONArray jsonArray = new JSONArray(content);
-
-            List<Double> faturamentos = new ArrayList<>();
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                if (!jsonObject.isNull("valor")) {
-                    faturamentos.add(jsonObject.getDouble("valor"));
-                }
-            }
-
-            double menorFaturamento = faturamentos.stream().min(Double::compare).orElse(0.0);
-            double maiorFaturamento = faturamentos.stream().max(Double::compare).orElse(0.0);
-            double mediaMensal = faturamentos.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-            long diasAcimaDaMedia = faturamentos.stream().filter(valor -> valor > mediaMensal).count();
-
-            System.out.println("Menor valor de faturamento: " + menorFaturamento);
-            System.out.println("Maior valor de faturamento: " + maiorFaturamento);
-            System.out.println("Número de dias com faturamento acima da média: " + diasAcimaDaMedia);
-
+            tryToReadFaturamento(filePath);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Erro ao ler o arquivo JSON: " + e.getMessage());
         }
+    }
+
+    private static void tryToReadFaturamento(String filePath) throws IOException {
+        var jsonArray = readJsonFile(filePath);
+        var faturamentos = getFaturamentos(jsonArray);
+        print(faturamentos);
+    }
+
+    private static JSONArray readJsonFile(String filePath) throws IOException {
+        var content = new String(Files.readAllBytes(Paths.get(filePath)));
+        return new JSONArray(content);
+    }
+
+    private static List<Double> getFaturamentos(JSONArray jsonArray) {
+        return IntStream.range(0, jsonArray.length())
+                .mapToObj(jsonArray::getJSONObject)
+                .filter(jsonObject -> !jsonObject.isNull("valor"))
+                .map(jsonObject -> jsonObject.getDouble("valor"))
+                .toList();
+    }
+
+    private static void print(List<Double> faturamentos) {
+        double menorFaturamento = faturamentos.stream().min(Double::compare)
+                .orElse(0.0);
+        double maiorFaturamento = faturamentos.stream().max(Double::compare)
+                .orElse(0.0);
+        double mediaMensal = faturamentos.stream().mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0.0);
+        long diasAcimaDaMedia = faturamentos.stream().filter(valor -> valor > mediaMensal)
+                .count();
+
+        System.out.println("Menor valor de faturamento: " + menorFaturamento);
+        System.out.println("Maior valor de faturamento: " + maiorFaturamento);
+        System.out.println(
+                "Número de dias com faturamento acima da média: " + diasAcimaDaMedia);
     }
 }
