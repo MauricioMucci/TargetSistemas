@@ -22,9 +22,11 @@ public class Exemplo3 {
     Estes dias devem ser ignorados no cálculo da média;
     * */
     public static void main(String[] args) {
-        String filePath = "./faturamento.json";
         try {
-            tryToReadFaturamento(filePath);
+            var filePath = Exemplo3.class.getClassLoader().getResource("faturamento.json");
+            if (filePath != null) {
+                tryToReadFaturamento(filePath.getPath());
+            }
         } catch (IOException e) {
             System.out.println("Erro ao ler o arquivo JSON: " + e.getMessage());
         }
